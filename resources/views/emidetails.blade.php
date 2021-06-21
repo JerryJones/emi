@@ -64,9 +64,7 @@
             </div>
                 
             <div class="row justify-content-center ">
-               
-                <h4>Data to be populated here via ajax</h4>
-
+                <div class="col" id="showData"></div>
             </div>  
         </div>
         <!-- Optional JavaScript -->
@@ -79,9 +77,6 @@
                 
                 //Fetch and generate table
                 $("#processData").on('click', function(){
-
-                    alert('Generating emi_details table. Please wait...'); //TOBE removed
-
                     let _url = 'emidetails/processdata';
                     let _token   = $('meta[name="csrf-token"]').attr('content')
 
@@ -93,6 +88,7 @@
                         },
                         success: function(response) {
                             if(response) {
+                                var emiTable = CreateTableFromJSON(response);
                                 console.log(response);
                             }
                         }
@@ -100,6 +96,48 @@
                 });
 
             });
+
+            function CreateTableFromJSON(tblData) {
+                // EXTRACT VALUE FOR HTML HEADER. 
+                var col = [];
+                for (var i = 0; i < tblData.length; i++) {
+                    for (var key in tblData[i]) {
+                        if (col.indexOf(key) === -1) {
+                            col.push(key);
+                        }
+                    }
+                }
+
+                // CREATE DYNAMIC TABLE.
+                var table = document.createElement("table");
+                table.classList.add('table');
+
+                // CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+
+                var tr = table.insertRow(-1);                   // TABLE ROW.
+
+                for (var i = 0; i < col.length; i++) {
+                    var th = document.createElement("th");      // TABLE HEADER.
+                    th.innerHTML = col[i];
+                    tr.appendChild(th);
+                }
+
+                // ADD JSON DATA TO THE TABLE AS ROWS.
+                for (var i = 0; i < tblData.length; i++) {
+
+                    tr = table.insertRow(-1);
+
+                    for (var j = 0; j < col.length; j++) {
+                        var tabCell = tr.insertCell(-1);
+                        tabCell.innerHTML = tblData[i][col[j]];
+                    }
+                }
+
+                // FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.
+                var divContainer = document.getElementById("showData");
+                divContainer.innerHTML = "";
+                divContainer.appendChild(table);
+            }
         </script>
 </body>
 </html>

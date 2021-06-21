@@ -38,12 +38,13 @@ class EmiDetailController extends Controller
 
         while($month < $end)
         {
-            $duration .= '`'.date('Y_M', $month).'` VARCHAR( 100 ), ';
-            $month = strtotime("+1 month", $month);
+            $duration .= '`'.date('Y_M', $month).'` DOUBLE(16,2) DEFAULT 0.00, ';
+            $month = strtotime("first day of next month", $month);
         }
 
         $create_table_query = "CREATE TABLE `emi_details` (
             `id` TINYINT( 3 ) UNSIGNED NOT NULL AUTO_INCREMENT,
+            `clientid` INT,
             {$duration}
             PRIMARY KEY (`id`)
         )";
@@ -63,9 +64,47 @@ class EmiDetailController extends Controller
 
         if ($success == true) {
             //TODO: insert data into database
-            
+            $loanDetails = LoanDetail::all();
+
+            // foreach ($loanDetails as $key => $value) {
+            foreach ($loanDetails as $loanDetail) {
+
+                $column_name = '';
+                $emi_value = '';
+                $monthly_emi = 0;
+                $remainder = 0;
+                $clientid = $loanDetail->clientid;
+                $start = strtotime( $loanDetail->first_payment_date);
+                $end = strtotime( $loanDetail->last_payment_date);
+                
+                $amount = $loanDetail->loan_amount; //get total amouunt
+                $total_emi = $loanDetail->num_of_payment; //get total emi
+
+                $monthly_emi = round($amount / $total_emi, 2); // calculate monthly emi
+                $last_emi = ( $amount - ($monthly_emi * ($total_emi - 1) ) ); // calculate last emi
+
+                $remainder = $amount / $monthly_emi; // get reminder to adjust in total
+
+                while($start < $end)
+                {
+                    $column_name .= '`'.date('Y_M', $start).'`,';
+                    $start = strtotime("first day of next month", $start);
+                }
+
+                for ($i=0; $i < ($total_emi -1 ); $i++) { 
+                    $emi_value .= ', '. $monthly_emi;
+                }
+                // prepare insert query
+                $column_name = rtrim($column_name,','); //remove unwanted string
+                $insert_query = "INSERT INTO `emi_details`(`clientid`, $column_name) VALUES ($clientid $emi_value, $last_emi)";
+
+                DB::statement($insert_query);
+            }
+
+            // get all data from emi_details and sent it to view
+            $emiDetails = EmiDetail::all();
             //TODO fetch and return data from the table
-            return response()->json($create_table_query); // This out put just to verify the generated query
+            return response()->json($emiDetails); // This out put just to verify the generated query
         } else {
             //error, return failure message
             return response()->json(["message" => $e->getMessage()]);
