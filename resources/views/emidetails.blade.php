@@ -76,8 +76,12 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <script>
             $( document ).ready(function() {
+                
                 //Fetch and generate table
                 $("#processData").on('click', function(){
+
+                    alert('Generating emi_details table. Please wait...'); //TOBE removed
+
                     let _url = 'emidetails/processdata';
                     let _token   = $('meta[name="csrf-token"]').attr('content')
 
